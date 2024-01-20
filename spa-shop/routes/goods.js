@@ -1,59 +1,40 @@
-import express from "express";
-
-const router = express.Router();
-
 // /routes/goods.js
 
-const goods = [
-  {
-    goodsId: 1,
-    name: "상품 1",
-    thumbnailUrl:
-      "https://cdn.pixabay.com/photo/2016/09/07/19/54/wines-1652455_1280.jpg",
-    category: "drink",
-    price: 6.2,
-  },
-  {
-    goodsId: 2,
-    name: "상품 2",
-    thumbnailUrl:
-      "https://cdn.pixabay.com/photo/2014/08/26/19/19/wine-428316_1280.jpg",
-    category: "drink",
-    price: 0.11,
-  },
-  {
-    goodsId: 3,
-    name: "상품 3",
-    thumbnailUrl:
-      "https://cdn.pixabay.com/photo/2016/09/07/02/12/frogs-1650658_1280.jpg",
-    category: "drink",
-    price: 2.2,
-  },
-  {
-    goodsId: 4,
-    name: "상품 4",
-    thumbnailUrl:
-      "https://cdn.pixabay.com/photo/2016/09/07/02/11/frogs-1650657_1280.jpg",
-    category: "drink",
-    price: 0.1,
-  },
-];
+import express from "express";
+import Goods from "../schemas/goods.js";
 
-/** 상품 목록 조회 API **/
-router.get("/goods", (req, res) => {
-  return res.status(200).json({
-    goods: goods,
+// Express.js의 라우터를 생성합니다.
+const router = express.Router();
+
+/** 상품 등록 **/
+// localhost:3000/api/goods POST
+// 여기에서 .. api/goods라고 했으면 .. api/api/goods가 되었을 것.
+// app.js에서 어떻게 설정을 했느냐에 따라서 여기에서도 설정이 달라져야 한다.
+router.post("/goods", async (req, res) => {
+  const { goodsId, name, thumbnailUrl, category, price } = req.body;
+
+  if (!goodsId) {
+    return res
+      .status(400)
+      .json({ success: false, errorMessage: "goodsId 속성이 없습니다." });
+  }
+
+  const goods = await Goods.find({ goodsId }).exec();
+  if (goods.length) {
+    return res
+      .status(400)
+      .json({ success: false, errorMessage: "이미 존재하는 데이터입니다." });
+  }
+
+  const createdGoods = await Goods.create({
+    goodsId,
+    name,
+    thumbnailUrl,
+    category,
+    price,
   });
+
+  return res.status(201).json({ goods: createdGoods });
 });
-
-/** 상품 상세 조회 **/
-// localhost:3000/api/goods/:goodsId GET
-router.get("/goods/:goodsId"),
-  (req, res) => {
-    const goodsId = req.params.goodsId;
-    const goodsItem = goods.find((item) => item.goodsId === +goodsId);
-
-    return res.json({ goods: goodsItem });
-  };
 
 export default router;
